@@ -47,13 +47,11 @@ public class Crawler {
             queueRecords = kafka.recieve(CrawlerQueueRecord.class);
             if(queueRecords.isEmpty()){
                 emptyQueueStartTime = emptyQueueStartTime == 0 ? System.currentTimeMillis() : emptyQueueStartTime;
-                if(System.currentTimeMillis() - emptyQueueStartTime > EMPTY_QUEUE_TIME_LIMIT) {
-                    break;
-                }
+                if(System.currentTimeMillis() - emptyQueueStartTime > EMPTY_QUEUE_TIME_LIMIT) { break; }
             }
 
             int i = 0;
-            currentDistance = !queueRecords.isEmpty() && queueRecords.get(i) != null ? queueRecords.get(i).getDistance(): 0;
+            currentDistance = !queueRecords.isEmpty() && queueRecords.get(i) != null ? queueRecords.get(i).getDistance(): currentDistance;
             while (i < queueRecords.size() && currentDistance < MAX_DISTANCE) {
                 CrawlerQueueRecord queueRecord = queueRecords.get(i);
                 currentDistance = queueRecord.getDistance();
