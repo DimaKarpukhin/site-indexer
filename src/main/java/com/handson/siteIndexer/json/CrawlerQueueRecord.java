@@ -5,6 +5,7 @@ import java.util.Objects;
 public class CrawlerQueueRecord {
     private String url;
     private int distance;
+    private String crawlId = "";
 
     public static CrawlerQueueRecord of (String url, int distance) {
         CrawlerQueueRecord res = new CrawlerQueueRecord();
@@ -33,6 +34,14 @@ public class CrawlerQueueRecord {
     @Override
     public int hashCode() {
         return Objects.hash(url, distance);
+    }
+
+    public String getCrawlId() {
+        return crawlId;
+    }
+
+    public void setCrawlId(String crawlId) {
+        this.crawlId = crawlId;
     }
 
     public String getUrl() {

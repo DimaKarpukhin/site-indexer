@@ -34,16 +34,33 @@ public class ElasticsearchUtil {
             MediaType mediaType = MediaType.parse("application/json");
             RequestBody body = RequestBody.create(mediaType, content);
             System.out.println(om.writeValueAsString(doc));
+            System.out.println(doc.toString());
             Request request = new Request.Builder()
                     .url(baseUrl +  "/doc")
                     .method("POST", body)
                     .addHeader("Content-Type", "application/json")
                     .addHeader(HttpHeaders.AUTHORIZATION, "Basic " + auth)
                     .build();
-            Response res =  client.newCall(request).execute();
-            System.out.println(res.body().string());
+            Response response =  client.newCall(request).execute();
+            System.out.println("@@@@" + response.body().string());
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public  Response search()  {
+        Response response = null;
+        try {
+            OkHttpClient client = new OkHttpClient();
+            Request request = new Request.Builder()
+                    .url("https://site:8c6d4815e5340e273775354f46e86774@gimli-eu-west-1.searchly.com/elastic/_search" )
+                    .method("GET", null)
+                    .build();
+            response = client.newCall(request).execute();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return response;
     }
 }
