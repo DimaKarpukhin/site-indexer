@@ -33,7 +33,7 @@ public class AppController
         return "Hello!";
     }
 
-    @RequestMapping(value = "/kafka", method = RequestMethod.GET)
+    @RequestMapping(value = "/invokeKafkaListener", method = RequestMethod.GET)
     public void invokeKafkaListener() {
         crawler.startListeningToKafka();
     }
@@ -43,13 +43,13 @@ public class AppController
         return crawler.crawl(baseUrl);
     }
 
-    @RequestMapping(value = "/status", method = RequestMethod.GET)
+    @RequestMapping(value = "/getCrawlStatus", method = RequestMethod.GET)
     public CrawlStatus getCrawlStatus(String crawlId) {
         return crawler.getStatus(crawlId);
     }
 
-    @RequestMapping(value = "/search", method = RequestMethod.POST)
-    public String searchFromElastic(String crawlId, String text) throws IOException {
-        return crawler.searchFromElastic(crawlId, text);
+    @RequestMapping(value = "/searchWithElastic", method = RequestMethod.POST)
+    public String searchWithElastic(String crawlId, String text) throws IOException {
+        return crawler.searchWithElastic(crawlId, text);
     }
 }

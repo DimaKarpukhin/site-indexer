@@ -34,7 +34,7 @@ public class Crawler {
     private static Set<String> visitedUrls = new HashSet<>();
     private static HashMap<String, CrawlStatus> crawlsCollection = new HashMap<>();
 
-    String searchFromElastic(String crawlId, String text) throws IOException {
+    String searchWithElastic(String crawlId, String text) throws IOException {
         System.out.println(">> receiving data from elastic search: search text->" + text);
         String res = elasticsearch.search(crawlId, text);
 
