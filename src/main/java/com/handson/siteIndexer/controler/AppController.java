@@ -52,7 +52,7 @@ public class AppController
     }
 
     @RequestMapping(value = "/search", method = RequestMethod.POST)
-    public Response search(String crawlId, String text) throws IOException {
+    public String searchFromElastic(String crawlId, String text) throws IOException {
         return crawler.searchFromElastic(crawlId, text);
     }
 }

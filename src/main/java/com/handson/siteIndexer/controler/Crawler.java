@@ -25,8 +25,6 @@ public class Crawler {
     private static final int MAX_DISTANCE_LIMIT = 10;
     private static final int MAX_TIME_LIMIT = 90000;
     private static final int EMPTY_QUEUE_TIME_LIMIT = 10000;
-    private static final String ELASTIC_SEARCH_URL = 
-            "https://site:8c6d4815e5340e273775354f46e86774@gimli-eu-west-1.searchly.com/elastic/_search";
 
     @Autowired
     private ElasticsearchUtil elasticsearch;
@@ -36,36 +34,11 @@ public class Crawler {
     private static Set<String> visitedUrls = new HashSet<>();
     private static HashMap<String, CrawlStatus> crawlsCollection = new HashMap<>();
 
-    Response searchFromElastic(String crawlId, String text) throws IOException {
+    String searchFromElastic(String crawlId, String text) throws IOException {
         System.out.println(">> receiving data from elastic search: search text->" + text);
-        OkHttpClient client = new OkHttpClient();
-        MediaType mediaType = MediaType.parse("application/json");
-        RequestBody body = RequestBody.create(mediaType, buildBody(crawlId, text));
-        Request request = new Request.Builder()
-                .url(ELASTIC_SEARCH_URL)
-                .method("POST", body)
-                .addHeader("Content-Type", "application/json")
-                .build();
-        Response response = client.newCall(request).execute();
+        String res = elasticsearch.search(crawlId, text);
 
-        return response;
-    }
-
-    private String buildBody(String crawlId, String text){
-         return " {\r\n" +
-                 "  \"query\": {\r\n" +
-                 "    \"bool\": {\r\n" +
-                 "      \"must\": {\r\n" +
-                 "        \"bool\" : {\r\n" +
-                 "          \"must\": [\r\n" +
-                 "            { \"match\": { \"crawlId\": \"" + crawlId + "\" }} ,\r\n" +
-                 "            { \"match\": { \"content\": \"" + text + "\"}} \r\n" +
-                 "           ]\r\n" +
-                 "        }\r\n" +
-                 "      }\r\n" +
-                 "    }\r\n" +
-                 "  }\r\n" +
-                 "}";
+        return res.substring(res.indexOf("\"hits\":"));
     }
 
     CrawlStatus getStatus(String crawlId) {
@@ -159,7 +132,6 @@ public class Crawler {
         System.out.println(">> adding urls to queue: distance->" + distance + " amount->" + urls.size());
         crawlsCollection.get(crawlId).setDistanceFromRoot(distance);
         for (String url : urls) {
-            System.out.println("  -> url" + url);
             if (!visitedUrls.contains(crawlId + url)) {
                 visitedUrls.add(crawlId + url);
                 sendSingleQueueRecordToKafka(crawlId, url, distance);
@@ -185,7 +157,7 @@ public class Crawler {
     }
 
     private List<String> extractWebPageUrls(String baseUrl, Document webPageContent) {
-        List<String> links = webPageContent.select("a[href], link[href]").eachAttr("abs:href");
+        List<String> links = webPageContent.select("a[href]").eachAttr("abs:href");
 
         return links.stream().filter(url -> url.startsWith(baseUrl)).collect(Collectors.toList());
     }

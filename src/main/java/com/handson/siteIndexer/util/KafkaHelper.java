@@ -46,7 +46,11 @@ public class KafkaHelper {
     public  <T> boolean send(T record)  {
         try {
             String message = om.writeValueAsString(record);
-            producer.send(new ProducerRecord<String,String>(KafkaEmbeddedConfig.TEST_TOPIC, UUID.randomUUID().toString(),message)).get();
+            producer.send(new ProducerRecord<>(
+                    KafkaEmbeddedConfig.TEST_TOPIC,
+                    UUID.randomUUID().toString(),
+                    message))
+                    .get();
             producer.flush();
             return true;
         }catch (Exception e) {
