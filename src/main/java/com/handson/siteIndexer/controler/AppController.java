@@ -34,11 +34,8 @@ public class AppController
     }
 
     @RequestMapping(value = "/kafka", method = RequestMethod.GET)
-    public String testKafka()
-    {
-        kafka.send("Hello from kafka" + ++i);
-
-        return kafka.recieve(String.class).toString();
+    public void invokeKafkaListener() {
+        crawler.startListeningToKafka();
     }
 
     @RequestMapping(value = "/crawl", method = RequestMethod.GET)
