@@ -3,13 +3,15 @@ package com.handson.siteIndexer.json;
 import java.util.Objects;
 
 public class UrlSearchDoc {
-    String url;
-    String baseUrl;
-    String content;
-    int level;
+    private String url;
+    private String baseUrl;
+    private String content;
+    private int level;
+    private String crawlId;
 
-    public static UrlSearchDoc of(String content, String url, String baseUrl, int level) {
+    public static UrlSearchDoc of(String crawlId, String content, String url, String baseUrl, int level) {
         UrlSearchDoc res = new UrlSearchDoc();
+        res.crawlId = crawlId;
         res.url = url;
         res.baseUrl = baseUrl;
         res.content = content;
@@ -20,7 +22,8 @@ public class UrlSearchDoc {
     @Override
     public String toString() {
         return "UrlSearchDoc{" +
-                "url='" + url + '\'' +
+                "crawlId='" + crawlId + '\'' +
+                ", url='" + url + '\'' +
                 ", baseUrl='" + baseUrl + '\'' +
                 ", content='" + content + '\'' +
                 ", level=" + level +
@@ -41,6 +44,14 @@ public class UrlSearchDoc {
     @Override
     public int hashCode() {
         return Objects.hash(url, baseUrl, content, level);
+    }
+
+    public String getCrawlId() {
+        return crawlId;
+    }
+
+    public void setCrawlId(String crawlId) {
+        this.crawlId = crawlId;
     }
 
     public String getUrl() {

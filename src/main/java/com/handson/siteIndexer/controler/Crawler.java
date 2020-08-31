@@ -3,13 +3,16 @@ package com.handson.siteIndexer.controler;
 import com.handson.siteIndexer.json.*;
 import com.handson.siteIndexer.util.ElasticsearchUtil;
 import com.handson.siteIndexer.util.KafkaHelper;
+import com.squareup.okhttp.*;
 import net.minidev.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -19,9 +22,11 @@ import java.util.stream.Collectors;
 @Component
 public class Crawler {
     private static final int MAX_MINUTES = 2;
-    private static final int MAX_DISTANCE_LIMIT = 4;
-    private static final int MAX_TIME_LIMIT = 100000;
+    private static final int MAX_DISTANCE_LIMIT = 10;
+    private static final int MAX_TIME_LIMIT = 90000;
     private static final int EMPTY_QUEUE_TIME_LIMIT = 10000;
+    private static final String ELASTIC_SEARCH_URL = 
+            "https://site:8c6d4815e5340e273775354f46e86774@gimli-eu-west-1.searchly.com/elastic/_search";
 
     @Autowired
     private ElasticsearchUtil elasticsearch;
@@ -31,25 +36,56 @@ public class Crawler {
     private static Set<String> visitedUrls = new HashSet<>();
     private static HashMap<String, CrawlStatus> crawlsCollection = new HashMap<>();
 
-//    public Response searchFromElastic(String crawlId) {
-//        return null;
-//    }
-//
+    Response searchFromElastic(String crawlId, String text) throws IOException {
+        System.out.println(">> receiving data from elastic search: search text->" + text);
+        OkHttpClient client = new OkHttpClient();
+        MediaType mediaType = MediaType.parse("application/json");
+        RequestBody body = RequestBody.create(mediaType, buildBody(crawlId, text));
+        Request request = new Request.Builder()
+                .url(ELASTIC_SEARCH_URL)
+                .method("POST", body)
+                .addHeader("Content-Type", "application/json")
+                .build();
+        Response response = client.newCall(request).execute();
+
+        return response;
+    }
+
+    private String buildBody(String crawlId, String text){
+         return " {\r\n" +
+                 "  \"query\": {\r\n" +
+                 "    \"bool\": {\r\n" +
+                 "      \"must\": {\r\n" +
+                 "        \"bool\" : {\r\n" +
+                 "          \"must\": [\r\n" +
+                 "            { \"match\": { \"crawlId\": \"" + crawlId + "\" }} ,\r\n" +
+                 "            { \"match\": { \"content\": \"" + text + "\"}} \r\n" +
+                 "           ]\r\n" +
+                 "        }\r\n" +
+                 "      }\r\n" +
+                 "    }\r\n" +
+                 "  }\r\n" +
+                 "}";
+    }
+
     CrawlStatus getStatus(String crawlId) {
         return crawlsCollection.get(crawlId);
     }
 
-    String crawl(String url) {
+    String crawl(String baseUrl) {
         String crawlId = UUID.randomUUID().toString();
         crawlsCollection.put(crawlId, new CrawlStatus(
-                url,
+                baseUrl,
                 State.RUNNING,
                 System.currentTimeMillis(),
                 0,
                 FinishReason.NOT_FINISHED));
-        sendSingleQueueRecordToKafka(crawlId, url, 0);
+        sendSingleQueueRecordToKafka(crawlId, baseUrl, 0);
 
-        return crawlId;
+        return "{\r\n" +
+                "  \"id\": \"" + crawlId +
+                "\"\r\n" +
+                "}";
     }
 
     @PostConstruct
@@ -59,12 +95,12 @@ public class Crawler {
     }
 
     private void run() {
-        System.out.println("Kafka thread running");
+        System.out.println(">> Kafka thread running <<");
         long runningTime = 0;
         long startTime = System.currentTimeMillis();
         while (TimeUnit.MILLISECONDS.toMinutes(runningTime) < MAX_MINUTES) {
             List<CrawlerQueueRecord> queueRecords = kafka.recieve(CrawlerQueueRecord.class);
-
+            System.out.println(">> receiving queueRecords from kafka: amount->" + queueRecords.size());
             for (CrawlerQueueRecord queueRecord : queueRecords) {
                 crawlSingleUrl(queueRecord);
             }
@@ -72,6 +108,7 @@ public class Crawler {
             checkCrawlsTimeLimits();
             runningTime = System.currentTimeMillis() - startTime;
         }
+        System.out.println(">> Kafka stop running <<");
     }
 
     private void crawlSingleUrl(CrawlerQueueRecord queueRecord) {
@@ -90,9 +127,10 @@ public class Crawler {
     private void process(String crawlId, String webPageUrl, int crawlDistance) {
         String baseUrl = crawlsCollection.get(crawlId).getBaseUrl();
         Document webPageContent = getWebPageContent(webPageUrl);
+        System.out.println(">> extracting urls from current webPage: webPageUrl is " + webPageUrl + " baseUrl is " + baseUrl);
         List<String> innerUrls = extractWebPageUrls(baseUrl, webPageContent);
         addUrlsToQueue(crawlId, innerUrls, crawlDistance);
-        addElasticSearch(baseUrl, webPageUrl, webPageContent, crawlDistance);
+        addElasticSearch(crawlId, baseUrl, webPageUrl, webPageContent, crawlDistance);
     }
 
     private void checkCrawlsTimeLimits() {
@@ -121,6 +159,7 @@ public class Crawler {
         System.out.println(">> adding urls to queue: distance->" + distance + " amount->" + urls.size());
         crawlsCollection.get(crawlId).setDistanceFromRoot(distance);
         for (String url : urls) {
+            System.out.println("  -> url" + url);
             if (!visitedUrls.contains(crawlId + url)) {
                 visitedUrls.add(crawlId + url);
                 sendSingleQueueRecordToKafka(crawlId, url, distance);
@@ -137,16 +176,16 @@ public class Crawler {
         kafka.send(queueRecord);
     }
 
-    private void addElasticSearch(String baseUrl, String webPageUrl,Document webPageContent, int level) {
+    private void addElasticSearch(String crawlId, String baseUrl, String webPageUrl,
+                                  Document webPageContent, int level) {
         System.out.println(">> adding elastic search for webPage: " + baseUrl);
         String text = String.join(" ", webPageContent.select("a[href]").eachText());
-        UrlSearchDoc searchDoc = UrlSearchDoc.of(text, webPageUrl, baseUrl, level);
+        UrlSearchDoc searchDoc = UrlSearchDoc.of(crawlId, text, webPageUrl, baseUrl, level);
         elasticsearch.addData(searchDoc);
     }
 
     private List<String> extractWebPageUrls(String baseUrl, Document webPageContent) {
-        System.out.println(">> extracting urls from current webPage");
-        List<String> links = webPageContent.select("a[href]").eachAttr("abs:href");
+        List<String> links = webPageContent.select("a[href], link[href]").eachAttr("abs:href");
 
         return links.stream().filter(url -> url.startsWith(baseUrl)).collect(Collectors.toList());
     }

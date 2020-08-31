@@ -2,11 +2,14 @@ package com.handson.siteIndexer.controler;
 
 import com.handson.siteIndexer.json.CrawlStatus;
 import com.handson.siteIndexer.util.KafkaHelper;
+import com.squareup.okhttp.Response;
 import net.minidev.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.io.IOException;
 
 /**
  * Spring Boot Hello案例
@@ -48,9 +51,8 @@ public class AppController
         return crawler.getStatus(crawlId);
     }
 
-//    @RequestMapping(value = "/search", method = RequestMethod.GET)
-//    public Response search(String crawlId) {
-//        return crawler.searchFromElastic(crawlId);
-//    }
-
+    @RequestMapping(value = "/search", method = RequestMethod.POST)
+    public Response search(String crawlId, String text) throws IOException {
+        return crawler.searchFromElastic(crawlId, text);
+    }
 }

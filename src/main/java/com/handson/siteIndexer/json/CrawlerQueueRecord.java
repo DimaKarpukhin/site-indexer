@@ -5,7 +5,7 @@ import java.util.Objects;
 public class CrawlerQueueRecord {
     private String url;
     private int distance;
-    private String crawlId = "";
+    private String crawlId;
 
     public static CrawlerQueueRecord of (String url, int distance) {
         CrawlerQueueRecord res = new CrawlerQueueRecord();
