@@ -1,7 +1,7 @@
-package com.handson.siteIndexer.util;
+package com.handson.siteIndexer.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.handson.siteIndexer.json.UrlSearchDoc;
+import com.handson.siteIndexer.entities.UrlSearchDoc;
 import com.squareup.okhttp.*;
 import org.apache.tomcat.util.codec.binary.Base64;
 import org.slf4j.Logger;
@@ -29,7 +29,6 @@ public class ElasticsearchUtil {
     @Autowired
     ObjectMapper om;
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchUtil.class);
-
 
     public  void addData(UrlSearchDoc doc)  {
         try {

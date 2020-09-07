@@ -1,4 +1,4 @@
-package com.handson.siteIndexer.config;
+package com.handson.siteIndexer.configs;
 
 
 import org.springframework.context.annotation.Bean;

@@ -1,6 +1,6 @@
 package com.handson.siteIndexer;
 
-import com.handson.siteIndexer.config.KafkaEmbeddedConfig;
+import com.handson.siteIndexer.configs.KafkaEmbeddedConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;

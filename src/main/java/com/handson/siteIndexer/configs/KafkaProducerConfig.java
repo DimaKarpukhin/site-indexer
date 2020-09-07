@@ -1,4 +1,4 @@
-package com.handson.siteIndexer.config;
+package com.handson.siteIndexer.configs;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -33,6 +33,4 @@ public class KafkaProducerConfig {
 //        configs.put(ProducerConfig., StringSerializer.class);
         return new KafkaProducer<>(configs) ;
     }
-
-
 }

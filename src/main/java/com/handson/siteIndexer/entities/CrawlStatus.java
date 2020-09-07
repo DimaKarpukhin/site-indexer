@@ -1,4 +1,4 @@
-package com.handson.siteIndexer.json;
+package com.handson.siteIndexer.entities;
 
 public class CrawlStatus {
     private String baseUrl;

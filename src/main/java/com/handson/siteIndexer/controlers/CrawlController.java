@@ -1,26 +1,21 @@
-package com.handson.siteIndexer.controler;
+package com.handson.siteIndexer.controlers;
 
-import com.handson.siteIndexer.json.*;
-import com.handson.siteIndexer.util.ElasticsearchUtil;
-import com.handson.siteIndexer.util.KafkaHelper;
-import com.squareup.okhttp.*;
-import net.minidev.json.JSONObject;
+import com.handson.siteIndexer.entities.*;
+import com.handson.siteIndexer.utils.ElasticsearchUtil;
+import com.handson.siteIndexer.utils.KafkaUtil;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.select.Elements;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Component
-public class Crawler {
+public class CrawlController {
     private static final int MAX_MINUTES = 2;
     private static final int MAX_DISTANCE_LIMIT = 10;
     private static final int MAX_TIME_LIMIT = 90000;
@@ -29,23 +24,23 @@ public class Crawler {
     @Autowired
     private ElasticsearchUtil elasticsearch;
     @Autowired
-    private KafkaHelper kafka;
+    private KafkaUtil kafka;
 
     private static Set<String> visitedUrls = new HashSet<>();
     private static HashMap<String, CrawlStatus> crawlsCollection = new HashMap<>();
 
-    String searchWithElastic(String crawlId, String text) throws IOException {
+    public String searchWithElastic(String crawlId, String text) throws IOException {
         System.out.println(">> receiving data from elastic search: search text->" + text);
         String res = elasticsearch.search(crawlId, text);
 
         return res.substring(res.indexOf("\"hits\":"));
     }
 
-    CrawlStatus getStatus(String crawlId) {
+    public CrawlStatus getStatus(String crawlId) {
         return crawlsCollection.get(crawlId);
     }
 
-    String crawl(String baseUrl) {
+    public String crawl(String baseUrl) {
         String crawlId = UUID.randomUUID().toString();
         crawlsCollection.put(crawlId, new CrawlStatus(
                 baseUrl,
@@ -72,8 +67,8 @@ public class Crawler {
         long runningTime = 0;
         long startTime = System.currentTimeMillis();
         while (TimeUnit.MILLISECONDS.toMinutes(runningTime) < MAX_MINUTES) {
-            List<CrawlerQueueRecord> queueRecords = kafka.recieve(CrawlerQueueRecord.class);
-            System.out.println(">> receiving queueRecords from kafka: amount->" + queueRecords.size());
+            List<CrawlerQueueRecord> queueRecords = kafka.receive(CrawlerQueueRecord.class);
+            System.out.println(">> receiving queueRecords from kafka: received->" + queueRecords.size() + " records");
             for (CrawlerQueueRecord queueRecord : queueRecords) {
                 crawlSingleUrl(queueRecord);
             }
@@ -98,12 +93,16 @@ public class Crawler {
     }
 
     private void process(String crawlId, String webPageUrl, int crawlDistance) {
-        String baseUrl = crawlsCollection.get(crawlId).getBaseUrl();
-        Document webPageContent = getWebPageContent(webPageUrl);
-        System.out.println(">> extracting urls from current webPage: webPageUrl is " + webPageUrl + " baseUrl is " + baseUrl);
-        List<String> innerUrls = extractWebPageUrls(baseUrl, webPageContent);
-        addUrlsToQueue(crawlId, innerUrls, crawlDistance);
-        addElasticSearch(crawlId, baseUrl, webPageUrl, webPageContent, crawlDistance);
+        try {
+            Document webPageContent = Jsoup.connect(webPageUrl).get();
+            String baseUrl = crawlsCollection.get(crawlId).getBaseUrl();
+            System.out.println(">> extracting links from webPage: " + webPageUrl);
+            List<String> innerUrls = extractWebPageUrls(baseUrl, webPageContent);
+            addUrlsToQueue(crawlId, innerUrls, crawlDistance);
+            addElasticSearch(crawlId, baseUrl, webPageUrl, webPageContent, crawlDistance);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void checkCrawlsTimeLimits() {
@@ -129,7 +128,8 @@ public class Crawler {
     }
 
     private void addUrlsToQueue(String crawlId, List<String> urls, int distance) {
-        System.out.println(">> adding urls to queue: distance->" + distance + " amount->" + urls.size());
+        System.out.println(">> adding urls to queue: distance->" + distance
+                + ", added->" + urls.size() + " urls");
         crawlsCollection.get(crawlId).setDistanceFromRoot(distance);
         for (String url : urls) {
             if (!visitedUrls.contains(crawlId + url)) {
@@ -157,48 +157,14 @@ public class Crawler {
     }
 
     private List<String> extractWebPageUrls(String baseUrl, Document webPageContent) {
-        List<String> links = webPageContent.select("a[href]").eachAttr("abs:href");
 
-        return links.stream().filter(url -> url.startsWith(baseUrl)).collect(Collectors.toList());
+        List<String> links = webPageContent.select("a[href]")
+                .eachAttr("abs:href")
+                .stream()
+                .filter(url -> url.startsWith(baseUrl))
+                .collect(Collectors.toList());
+        System.out.println(">> extracted->" + links.size() + " links");
+
+        return links;
     }
-
-    private Document getWebPageContent(String webPageUrl) {
-        String content = getHttp(webPageUrl);
-        return Jsoup.parse(content);
-    }
-
-    private String getHttp(String requestURL){
-        if (requestURL == null || requestURL.trim().equals("")){
-            return "";
-        }
-        try (Scanner scanner = new Scanner(new URL(requestURL).openStream(),
-                StandardCharsets.UTF_8.toString())) {
-            scanner.useDelimiter("\\A");
-
-            return scanner.hasNext() ? scanner.next() : "";
-        }
-        catch (Exception e) {
-            return "";
-        }
-    }
-
-//    @PostConstruct
-//    void readFirstRecordFromKafka() {
-//        kafka.recieve(CrawlerQueueRecord.class);
-//    }
-//    private String getText(String webPageUrl) {
-//        System.out.println(">>getting text from webPage: " + webPageUrl);
-//        Elements links = extractLinksFromWebPage(webPageUrl);
-//
-//        return String.join("\n", links.eachText());
-//    }
-
-//    private Elements extractLinksFromWebPage(String webPageUrl){
-//        System.out.println(">>extracting links from webPage: " + webPageUrl);
-//        String content = getHttp(webPageUrl);
-//        Document doc = Jsoup.parse(content);
-//
-//        return doc.select("a[href]");
-//    }
-
 }

@@ -1,24 +1,18 @@
-package com.handson.siteIndexer.util;
+package com.handson.siteIndexer.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.handson.siteIndexer.config.KafkaEmbeddedConfig;
+import com.handson.siteIndexer.configs.KafkaEmbeddedConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 
 
-public class KafkaHelper {
-    public KafkaHelper(KafkaConsumer<String, String> consumer, KafkaProducer<String, String> producer, ObjectMapper om) {
+public class KafkaUtil {
+    public KafkaUtil(KafkaConsumer<String, String> consumer, KafkaProducer<String, String> producer, ObjectMapper om) {
         this.consumer = consumer;
         this.producer = producer;
         this.om = om;
@@ -29,7 +23,7 @@ public class KafkaHelper {
     ObjectMapper om;
 
 
-    public  <T> List<T> recieve( Class<T> targetClazz)  {
+    public  <T> List<T> receive(Class<T> targetClazz)  {
         List<T> res = new ArrayList<>();
         consumer.poll(Duration.ofSeconds(1)).forEach(x-> {
             try {

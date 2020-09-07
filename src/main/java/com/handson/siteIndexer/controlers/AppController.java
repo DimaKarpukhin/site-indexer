@@ -1,9 +1,7 @@
-package com.handson.siteIndexer.controler;
+package com.handson.siteIndexer.controlers;
 
-import com.handson.siteIndexer.json.CrawlStatus;
-import com.handson.siteIndexer.util.KafkaHelper;
-import com.squareup.okhttp.Response;
-import net.minidev.json.JSONObject;
+import com.handson.siteIndexer.entities.CrawlStatus;
+import com.handson.siteIndexer.utils.KafkaUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -17,15 +15,14 @@ import java.io.IOException;
  * Created by bysocket on 26/09/2017.
  */
 @RestController
-@RequestMapping(value = "/app")
+@RequestMapping(value = "")
 public class AppController
 {
-    int i = 0;
     @Autowired
-    KafkaHelper kafka;
+    KafkaUtil kafka;
 
     @Autowired
-    Crawler crawler;
+    CrawlController crawler;
 
     @RequestMapping(value = "/hello", method = RequestMethod.GET)
     public String sayHello()
@@ -33,22 +30,22 @@ public class AppController
         return "Hello!";
     }
 
-    @RequestMapping(value = "/invokeKafkaListener", method = RequestMethod.GET)
+    @RequestMapping(value = "/kafkaListener", method = RequestMethod.GET)
     public void invokeKafkaListener() {
         crawler.startListeningToKafka();
     }
 
-    @RequestMapping(value = "/crawl", method = RequestMethod.GET)
+    @RequestMapping(value = "/crawler", method = RequestMethod.GET)
     public String crawl(String baseUrl) {
         return crawler.crawl(baseUrl);
     }
 
-    @RequestMapping(value = "/getCrawlStatus", method = RequestMethod.GET)
+    @RequestMapping(value = "/crawlStatus", method = RequestMethod.GET)
     public CrawlStatus getCrawlStatus(String crawlId) {
         return crawler.getStatus(crawlId);
     }
 
-    @RequestMapping(value = "/searchWithElastic", method = RequestMethod.POST)
+    @RequestMapping(value = "/elasticSearch", method = RequestMethod.POST)
     public String searchWithElastic(String crawlId, String text) throws IOException {
         return crawler.searchWithElastic(crawlId, text);
     }

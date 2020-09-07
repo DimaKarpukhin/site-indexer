@@ -1,4 +1,4 @@
-package com.handson.siteIndexer.config;
+package com.handson.siteIndexer.configs;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -33,8 +33,7 @@ public class KafkaConsumerConfig {
         consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         KafkaConsumer<String, String> receiver =   new KafkaConsumer<String, String>(consumerProps);
         receiver.subscribe(Collections.singleton(KafkaEmbeddedConfig.TEST_TOPIC));
+
         return receiver;
     }
-
-  
 }

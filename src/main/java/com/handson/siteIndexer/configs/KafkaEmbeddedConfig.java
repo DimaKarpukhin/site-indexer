@@ -1,4 +1,4 @@
-package com.handson.siteIndexer.config;
+package com.handson.siteIndexer.configs;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +17,7 @@ public class KafkaEmbeddedConfig {
   public KafkaEmbedded kafkaEmbedded() {
     KafkaEmbedded kafkaEmbedded = new KafkaEmbedded(1, false, 1, TEST_TOPIC);
     kafkaEmbedded.setKafkaPorts(kafkaEmbeddedPort);
+
     return kafkaEmbedded;
   }
 }

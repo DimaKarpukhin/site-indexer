@@ -1,7 +1,7 @@
-package com.handson.siteIndexer.config;
+package com.handson.siteIndexer.configs;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.handson.siteIndexer.util.KafkaHelper;
+import com.handson.siteIndexer.utils.KafkaUtil;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +28,8 @@ public class KafkaHandlerConfig {
     ObjectMapper om;
 
     @Bean
-    public KafkaHelper handler(){
-        return new KafkaHelper(consumer, producer, om) ;
+    public KafkaUtil handler(){
+        return new KafkaUtil(consumer, producer, om) ;
     }
 
     @Bean
