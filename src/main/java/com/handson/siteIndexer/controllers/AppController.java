@@ -1,4 +1,4 @@
-package com.handson.siteIndexer.controlers;
+package com.handson.siteIndexer.controllers;
 
 import com.handson.siteIndexer.entities.CrawlStatus;
 import com.handson.siteIndexer.utils.KafkaUtil;
@@ -23,12 +23,6 @@ public class AppController
 
     @Autowired
     CrawlController crawler;
-
-    @RequestMapping(value = "/hello", method = RequestMethod.GET)
-    public String sayHello()
-    {
-        return "Hello!";
-    }
 
     @RequestMapping(value = "/kafkaListener", method = RequestMethod.GET)
     public void invokeKafkaListener() {

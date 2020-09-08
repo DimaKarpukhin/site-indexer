@@ -1,4 +1,4 @@
-package com.handson.siteIndexer.controlers;
+package com.handson.siteIndexer.controllers;
 
 import com.handson.siteIndexer.entities.*;
 import com.handson.siteIndexer.utils.ElasticsearchUtil;
