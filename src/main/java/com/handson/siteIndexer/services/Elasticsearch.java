@@ -1,4 +1,4 @@
-package com.handson.siteIndexer.utils;
+package com.handson.siteIndexer.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.handson.siteIndexer.entities.UrlSearchDoc;
@@ -15,7 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import java.io.IOException;
 
 @Component
-public class ElasticsearchUtil {
+public class Elasticsearch {
     private static final String ELASTIC_SEARCH_URL =
             "https://site:8c6d4815e5340e273775354f46e86774@gimli-eu-west-1.searchly.com/elastic/_search";
     private static final String API_KEY = "site:8c6d4815e5340e273775354f46e86774";
@@ -28,7 +28,7 @@ public class ElasticsearchUtil {
 
     @Autowired
     ObjectMapper om;
-    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchUtil.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Elasticsearch.class);
 
     public  void addData(UrlSearchDoc doc)  {
         try {

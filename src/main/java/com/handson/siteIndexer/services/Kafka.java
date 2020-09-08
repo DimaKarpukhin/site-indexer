@@ -1,4 +1,4 @@
-package com.handson.siteIndexer.utils;
+package com.handson.siteIndexer.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.handson.siteIndexer.configs.KafkaEmbeddedConfig;
@@ -11,8 +11,8 @@ import java.time.Duration;
 import java.util.*;
 
 
-public class KafkaUtil {
-    public KafkaUtil(KafkaConsumer<String, String> consumer, KafkaProducer<String, String> producer, ObjectMapper om) {
+public class Kafka {
+    public Kafka(KafkaConsumer<String, String> consumer, KafkaProducer<String, String> producer, ObjectMapper om) {
         this.consumer = consumer;
         this.producer = producer;
         this.om = om;

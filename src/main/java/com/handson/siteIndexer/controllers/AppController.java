@@ -1,7 +1,7 @@
 package com.handson.siteIndexer.controllers;
 
 import com.handson.siteIndexer.entities.CrawlStatus;
-import com.handson.siteIndexer.utils.KafkaUtil;
+import com.handson.siteIndexer.services.Kafka;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -19,7 +19,7 @@ import java.io.IOException;
 public class AppController
 {
     @Autowired
-    KafkaUtil kafka;
+    Kafka kafka;
 
     @Autowired
     CrawlController crawler;

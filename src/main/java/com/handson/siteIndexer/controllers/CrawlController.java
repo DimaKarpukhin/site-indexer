@@ -1,8 +1,8 @@
 package com.handson.siteIndexer.controllers;
 
 import com.handson.siteIndexer.entities.*;
-import com.handson.siteIndexer.utils.ElasticsearchUtil;
-import com.handson.siteIndexer.utils.KafkaUtil;
+import com.handson.siteIndexer.services.Elasticsearch;
+import com.handson.siteIndexer.services.Kafka;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +22,9 @@ public class CrawlController {
     private static final int EMPTY_QUEUE_TIME_LIMIT = 10 * 1000;
 
     @Autowired
-    private ElasticsearchUtil elasticsearch;
+    private Elasticsearch elasticsearch;
     @Autowired
-    private KafkaUtil kafka;
+    private Kafka kafka;
 
     private static Set<String> visitedUrls = new HashSet<>();
     private static HashMap<String, CrawlStatus> crawlsCollection = new HashMap<>();
