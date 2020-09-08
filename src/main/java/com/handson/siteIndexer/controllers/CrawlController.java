@@ -16,10 +16,10 @@ import java.util.stream.Collectors;
 
 @Component
 public class CrawlController {
-    private static final int MAX_MINUTES = 2;
+    private static final int MAX_MINUTES = 10;
     private static final int MAX_DISTANCE_LIMIT = 10;
-    private static final int MAX_TIME_LIMIT = 90000;
-    private static final int EMPTY_QUEUE_TIME_LIMIT = 10000;
+    private static final int MAX_TIME_LIMIT = 5 * 1000 * 60;
+    private static final int EMPTY_QUEUE_TIME_LIMIT = 10 * 1000;
 
     @Autowired
     private ElasticsearchUtil elasticsearch;
